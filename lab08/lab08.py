@@ -1,17 +1,6 @@
-numeroFilmesIndicados: int = int(input())
-listaFilmesIndicados: list[str] = []
-
-for _ in range(numeroFilmesIndicados):
-    listaFilmesIndicados.append(input())
-
-numeroAvaliacoes: int = int(input())
-listaAvaliacoes: list[list[str]] = []
-
-for _ in range(numeroAvaliacoes):
-    listaAvaliacoes.append(input().split(', '))
-
-
-def criaDicionarioCategorias() -> dict[str, list]:
+# Cria um dicionario com as chaves sendo o nome de cada categoria simples, e o valor sendo
+# uma lista com o nome do filme, sua nota total e a quantidade de avaliações
+def criaDicionarioCategorias(listaAvaliacoes: list) -> dict[str, list]:
     categorias: dict[str, list] = {
         'filme que causou mais bocejos': [],
         'filme que foi mais pausado': [],
@@ -33,7 +22,8 @@ def criaDicionarioCategorias() -> dict[str, list]:
     return categorias
 
 
-def determinaVencedoresCategoriasSimples() -> dict[str, str]:
+# Define qual filme ganhou cada categoria simples
+def determinaVencedoresCategoriasSimples(dicionarioCategorias: dict) -> dict[str, str]:
     vencedores = {}
     for chave, categoria in dicionarioCategorias.items():
         maiorNota: int = 0
@@ -55,16 +45,18 @@ def determinaVencedoresCategoriasSimples() -> dict[str, str]:
     return vencedores
 
 
-def determinaVencedorPiorFilme() -> str:
-    numeroVitorias: list[int] = determinaNumeroDeVitorias()
+# Define qual filme ganhou a categoria de pior filme
+def determinaVencedorPiorFilme(listaFilmesIndicados: list, vencedoresCategoriasSimples: dict, dicionarioCategorias: dict) -> str:
+    numeroVitorias: list[int] = determinaNumeroDeVitorias(listaFilmesIndicados, vencedoresCategoriasSimples)
     if numeroVitorias.count(max(numeroVitorias)) == 1:
         return listaFilmesIndicados[numeroVitorias.index(max(numeroVitorias))]
     else:
-        mediaSomadasFilmes = somaMedias(numeroVitorias)
+        mediaSomadasFilmes = somaMedias(numeroVitorias, listaFilmesIndicados, dicionarioCategorias)
         return listaFilmesIndicados[mediaSomadasFilmes.index(max(mediaSomadasFilmes))]
 
 
-def determinaNumeroDeVitorias() -> list[int]:
+# Cria uma lista com a quantidade de vitorias de cada filme
+def determinaNumeroDeVitorias(listaFilmesIndicados: list, vencedoresCategoriasSimples: dict) -> list[int]:
     numeroVitorias: list[int] = []
     for filme in listaFilmesIndicados:
         numeroVitorias.append(0)
@@ -74,7 +66,8 @@ def determinaNumeroDeVitorias() -> list[int]:
     return numeroVitorias
 
 
-def somaMedias(filmesQueVenceram: list[int]) -> list[float]:
+# Soma as medias das notas dos filmes em todas as categorias como criterio de desempate
+def somaMedias(filmesQueVenceram: list[int], listaFilmesIndicados: list, dicionarioCategorias: dict) -> list[float]:
     indiceFilme: int = 0
     mediaSomadasFilmes: list[float] = []
     for filme in listaFilmesIndicados:
@@ -87,7 +80,8 @@ def somaMedias(filmesQueVenceram: list[int]) -> list[float]:
     return mediaSomadasFilmes
 
 
-def determinaVencedorNaoMereciaEstarAqui() -> list[str]:
+# Define o vencedor da categoria não merecia estar aqui
+def determinaVencedorNaoMereciaEstarAqui(listaFilmesIndicados: list, dicionarioCategorias: dict) -> list[str]:
     filmesNaoAvaliados: list[str] = []
     for filme in listaFilmesIndicados:
         naoFoiAvaliado: bool = True
@@ -99,13 +93,8 @@ def determinaVencedorNaoMereciaEstarAqui() -> list[str]:
     return filmesNaoAvaliados
 
 
-dicionarioCategorias = criaDicionarioCategorias()
-vencedoresCategoriasSimples = determinaVencedoresCategoriasSimples()
-vencedorPiorFilme = determinaVencedorPiorFilme()
-vencedorNaoMereciaEstarAqui = determinaVencedorNaoMereciaEstarAqui()
-
-
-def mostrar() -> None:
+# Mostra os vencedores
+def mostrar(vencedoresCategoriasSimples: dict, vencedorPiorFilme: str, vencedorNaoMereciaEstarAqui: list) -> None:
     print('#### abacaxi de ouro ####', end='\n\n')
     print('categorias simples')
     for chave, valor in vencedoresCategoriasSimples.items():
@@ -127,4 +116,26 @@ def mostrar() -> None:
                 print(vencedorNaoMereciaEstarAqui[i], end=", ")
 
 
-mostrar()
+def main() -> None:
+    numeroFilmesIndicados: int = int(input())
+    listaFilmesIndicados: list[str] = []
+
+    for _ in range(numeroFilmesIndicados):
+        listaFilmesIndicados.append(input())
+
+    numeroAvaliacoes: int = int(input())
+    listaAvaliacoes: list[list[str]] = []
+
+    for _ in range(numeroAvaliacoes):
+        listaAvaliacoes.append(input().split(', '))
+
+    dicionarioCategorias = criaDicionarioCategorias(listaAvaliacoes)
+    vencedoresCategoriasSimples = determinaVencedoresCategoriasSimples(dicionarioCategorias)
+    vencedorPiorFilme = determinaVencedorPiorFilme(listaFilmesIndicados, vencedoresCategoriasSimples, dicionarioCategorias)
+    vencedorNaoMereciaEstarAqui = determinaVencedorNaoMereciaEstarAqui(listaFilmesIndicados, dicionarioCategorias)
+
+    mostrar(vencedoresCategoriasSimples, vencedorPiorFilme, vencedorNaoMereciaEstarAqui)
+
+
+if __name__ == '__main__':
+    main()
