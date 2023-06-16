@@ -1,6 +1,154 @@
+from dataclasses import dataclass
+
+@dataclass
+class Ferramenta:
+    caminhoImagem: str
+    listaOperacoes: list[list]
+    matrizImagem: list[int]
+    numeroColunasMatriz: int = 0
+    numeroLinhasMatriz: int = 0
+
+    def iniciaFerramenta(self) -> None:
+        self._leituraArquivo()
+
+        for operacao in self.listaOperacoes:
+            self._executarOperacao(operacao)
+
+    def _executarOperacao(self, operacao: list) -> None:
+        match operacao[0]:
+            case 'bucket':
+                self._bucket(operacao[1], operacao[2], operacao[3], operacao[4])
+            case 'negative':
+                print('negative')
+            case 'cmask':
+                print('cmask')
+            case 'save':
+                print('save')
+
+    def _bucket(self, cor: int, tolerancia: int, coluna: int, linha: int) -> None:
+        regioesConexas: list[list[int]] = self._buscaRegioesConexas(tolerancia, coluna, linha)
+    
+    def _buscaRegioesConexas(self, tolerancia: int, coluna: int, linha: int) -> list[list[int]]:
+        listaRegiaoConexa: list[list[int]] = self._preencheListaRegiaoConexa()
+        intencidadeCor: int = self.matrizImagem[linha][coluna]
+        listaRegiao = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCor, tolerancia, coluna, linha, listaRegiaoConexa)
+        print(listaRegiao)
+
+    def _buscaRegioesConexasRec(self, intencidadeCor, intencidadeCorAtual, tolerancia, coluna, linha, listaRegiaoConexa) -> list:
+        intencidadeCorAtual: int = self.matrizImagem[linha][coluna]
+        print(intencidadeCorAtual, coluna, linha, intencidadeCor, tolerancia)
+        if abs(intencidadeCorAtual - intencidadeCor) <= tolerancia:
+            listaRegiaoConexa[linha][coluna] = 1
+            possiveisPosicoesConexas = self._encontraPossiveisPosicoesConexas(coluna, linha)
+            print(possiveisPosicoesConexas)
+            for indicePosicao in range(len(possiveisPosicoesConexas) - 1):
+                print(possiveisPosicoesConexas[indicePosicao], len(possiveisPosicoesConexas))
+                colunaAtual = possiveisPosicoesConexas[indicePosicao][1]
+                linhaAtual = possiveisPosicoesConexas[indicePosicao][0]
+                listaRegiaoConexa = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
+        return listaRegiaoConexa
+    
+    def _encontraPossiveisPosicoesConexas(self, coluna: int, linha: int) -> list[tuple[int, int]]:
+        listaPosicoes: list = []
+        if linha != self.numeroLinhasMatriz - 1:
+            tupla: tuple[int, int] = linha + 1, coluna
+            listaPosicoes.append(tupla)
+            if coluna != self.numeroColunasMatriz - 1:
+                tupla = linha + 1, coluna + 1
+                listaPosicoes.append(tupla)
+            if coluna != 0:
+                tupla = linha + 1, coluna - 1
+                listaPosicoes.append(tupla)
+        if linha != 0:
+            tupla: tuple[int, int] = linha - 1, coluna
+            listaPosicoes.append(tupla)
+            if coluna != self.numeroColunasMatriz - 1:
+                tupla = linha - 1, coluna + 1
+                listaPosicoes.append(tupla)
+            if coluna != 0:
+                tupla = linha - 1, coluna - 1
+                listaPosicoes.append(tupla)
+        if coluna != 0:
+            tupla: tuple[int, int] = linha, coluna - 1
+            listaPosicoes.append(tupla)
+        if coluna != self.numeroColunasMatriz - 1:
+            tupla: tuple[int, int] = linha, coluna + 1
+            listaPosicoes.append(tupla)
+        return listaPosicoes
+        
+
+            
+    
+    def _preencheListaRegiaoConexa(self) -> list[list[int]]:
+        listaFinal: list = []
+        for _ in range(self.numeroLinhasMatriz):
+            listaLinha: list = []
+            for _ in range(self.numeroColunasMatriz):
+                listaLinha.append(0)
+            listaFinal.append(listaLinha)
+        return listaFinal
+
+    def _leituraArquivo(self) -> None:
+        arquivo = open(self.caminhoImagem)
+
+        linhasArquivo: list = arquivo.readlines()
+
+        tamanhoMatriz = self._limpaLista(linhasArquivo[2].split(' '))
+        self.numeroColunasMatriz = tamanhoMatriz[0]
+        self.numeroLinhasMatriz = tamanhoMatriz[1]
+        
+        for indiceLinha in range(4, len(linhasArquivo), 1):
+            linhaLimpa: list = self._limpaLista(linhasArquivo[indiceLinha].split(' '))
+            self.matrizImagem.append(linhaLimpa)
+
+        arquivo.close()
+
+    def _limpaLista(self, lista: list) -> list:
+        listaCaracteres: list = []
+        for caracteres in lista:
+            caracter: list = []
+            for numero in caracteres:
+                if numero in '0123456789' and len(numero) != 0:
+                    caracter.append(numero)
+            listaCaracteres.append(caracter)
+
+        listaFinal: list = []
+        for elemento in listaCaracteres:
+            if len(elemento) != 0:
+                listaFinal.append(''.join(elemento))
+        return self._converteParaInteiro(listaFinal)
+    
+    def _converteParaInteiro(self, lista: list[str]) -> list[int]:
+        listaFinal: list = []
+        for caracter in lista:
+            listaFinal.append(int(caracter))
+        return listaFinal
+
+
+
 def main() -> None:
     caminhoImagem: str = input()
     numeroOperacoes: int = int(input())
+    listaOperacoes: list[list] = preencheListaOperacoes(numeroOperacoes)
+
+    ferramenta = Ferramenta(caminhoImagem, listaOperacoes, list())
+    ferramenta.iniciaFerramenta()
+
+    print(ferramenta)
+
+def preencheListaOperacoes(numeroOperacoes: int) -> list[list]:
+    listaFinal: list = []
+    for _ in range(numeroOperacoes):
+        listaOperacao: list = []
+        operacao: list = input().split(' ')
+        if operacao[0] != 'save':
+            listaOperacao.append(operacao[0])
+            for indiceNumero in range(1, len(operacao), 1):
+                listaOperacao.append(int(operacao[indiceNumero]))
+            listaFinal.append(listaOperacao)
+        else:
+            listaFinal.append(operacao)
+    return listaFinal
 
 if __name__ == '__main__':
     main()
