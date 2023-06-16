@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import sys
-sys.setrecursionlimit(100)
+sys.setrecursionlimit(161004)
 
 @dataclass
 class Ferramenta:
@@ -9,6 +9,7 @@ class Ferramenta:
     matrizImagem: list[int]
     numeroColunasMatriz: int = 0
     numeroLinhasMatriz: int = 0
+    intensidadeMaxima: int = 0
 
     def iniciaFerramenta(self) -> None:
         self._leituraArquivo()
@@ -21,31 +22,74 @@ class Ferramenta:
             case 'bucket':
                 self._bucket(operacao[1], operacao[2], operacao[3], operacao[4])
             case 'negative':
-                print('negative')
+                self._negative(operacao[1], operacao[2], operacao[3])
             case 'cmask':
-                print('cmask')
+                self._cmask(operacao[1], operacao[2], operacao[3])
             case 'save':
-                print('save')
+                self._save(operacao[1])
+
+    def _save(self, caminho: str) -> None:
+        with open(caminho, 'w') as arquivo:
+            arquivo.write('P2\n')
+            arquivo.write('# Imagem criada pelo lab13\n')
+            arquivo.write(f'{self.numeroColunasMatriz} {self.numeroLinhasMatriz}\n')
+            arquivo.write(f'{self.intensidadeMaxima}\n')
+            for linha in self.matrizImagem:
+                indiceCor: int = 0
+                for cor in linha:
+                    indiceCor += 1
+                    if indiceCor == 1:
+                        arquivo.write(f'{cor}')
+                    else:
+                        arquivo.write(f' {cor}')
+                arquivo.write('\n')
+
 
     def _bucket(self, cor: int, tolerancia: int, coluna: int, linha: int) -> None:
-        regioesConexas: list[list[int]] = self._buscaRegioesConexas(tolerancia, coluna, linha)
-    
+        regiaoConexa: list[list[int]] = self._buscaRegioesConexas(tolerancia, coluna, linha)
+        self.matrizImagem = self._trocaCorMatriz(cor, regiaoConexa, self.matrizImagem)
+
+    def _negative(self, tolerancia: int, coluna: int, linha: int) -> None:
+        regiaoConexa: list[list[int]] = self._buscaRegioesConexas(tolerancia, coluna, linha)
+        self._trocaCorMatrizPorCorNegativa(regiaoConexa)
+
+    def _cmask(self, tolerancia: int, coluna: int, linha: int) -> None:
+        regiaoConexa: list[list[int]] = self._buscaRegioesConexas(tolerancia, coluna, linha)
+        matrizMascara: list = self._criaListaComONumero(255)
+        self.matrizImagem = self._trocaCorMatriz(0, regiaoConexa, matrizMascara)
+
+    def _trocaCorMatrizPorCorNegativa(self, mascara: list) -> list:
+        for indiceLinha in range(len(self.matrizImagem)):
+            for indiceColuna in range(len(self.matrizImagem[indiceLinha])):
+                if mascara[indiceLinha][indiceColuna] == 1:
+                    cor: int = self.intensidadeMaxima - self.matrizImagem[indiceLinha][indiceColuna]
+                    self.matrizImagem[indiceLinha][indiceColuna] = cor
+        
+    def _trocaCorMatriz(self, cor: int, mascara: list, matriz: list) -> list:
+        for indiceLinha in range(len(matriz)):
+            for indiceColuna in range(len(matriz[indiceLinha])):
+                if mascara[indiceLinha][indiceColuna] == 1:
+                    matriz[indiceLinha][indiceColuna] = cor
+        return matriz
+
     def _buscaRegioesConexas(self, tolerancia: int, coluna: int, linha: int) -> list[list[int]]:
-        listaRegiaoConexa: list[list[int]] = self._preencheListaRegiaoConexa()
+        listaRegiaoConexa: list[list[int]] = self._criaListaComONumero(0)
         intencidadeCor: int = self.matrizImagem[linha][coluna]
         listaRegiao = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCor, tolerancia, coluna, linha, listaRegiaoConexa)
+        return listaRegiao
 
     def _buscaRegioesConexasRec(self, intencidadeCor, intencidadeCorAtual, tolerancia, coluna, linha, listaRegiaoConexa) -> list:
         intencidadeCorAtual: int = self.matrizImagem[linha][coluna]
-        if abs(intencidadeCorAtual - intencidadeCor) <= tolerancia:
+        if abs(intencidadeCorAtual - intencidadeCor) <= tolerancia and listaRegiaoConexa[linha][coluna] != 1:
             listaRegiaoConexa[linha][coluna] = 1
             possiveisPosicoesConexas = self._encontraPossiveisPosicoesConexas(coluna, linha)
-            print(possiveisPosicoesConexas, listaRegiaoConexa, abs(intencidadeCorAtual - intencidadeCor) <= tolerancia)
             for posicao in possiveisPosicoesConexas:
-                print(posicao)
                 colunaAtual = posicao[1]
                 linhaAtual = posicao[0]
-                self._buscaRegioesConexasRec(intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
+                intencidadeCorAtual: int = self.matrizImagem[linhaAtual][colunaAtual]
+                listaRegiaoConexa = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
+            return listaRegiaoConexa
+        return listaRegiaoConexa
     
     def _encontraPossiveisPosicoesConexas(self, coluna: int, linha: int) -> list[tuple[int, int]]:
         listaPosicoes: list = []
@@ -74,16 +118,13 @@ class Ferramenta:
             tupla: tuple[int, int] = linha, coluna + 1
             listaPosicoes.append(tupla)
         return listaPosicoes
-        
 
-            
-    
-    def _preencheListaRegiaoConexa(self) -> list[list[int]]:
+    def _criaListaComONumero(self, numero: int) -> list[list[int]]:
         listaFinal: list = []
         for _ in range(self.numeroLinhasMatriz):
             listaLinha: list = []
             for _ in range(self.numeroColunasMatriz):
-                listaLinha.append(0)
+                listaLinha.append(numero)
             listaFinal.append(listaLinha)
         return listaFinal
 
@@ -95,6 +136,8 @@ class Ferramenta:
         tamanhoMatriz = self._limpaLista(linhasArquivo[2].split(' '))
         self.numeroColunasMatriz = tamanhoMatriz[0]
         self.numeroLinhasMatriz = tamanhoMatriz[1]
+
+        self.intensidadeMaxima = int(linhasArquivo[3])
         
         for indiceLinha in range(4, len(linhasArquivo), 1):
             linhaLimpa: list = self._limpaLista(linhasArquivo[indiceLinha].split(' '))
@@ -132,8 +175,6 @@ def main() -> None:
 
     ferramenta = Ferramenta(caminhoImagem, listaOperacoes, list())
     ferramenta.iniciaFerramenta()
-
-    print(ferramenta)
 
 def preencheListaOperacoes(numeroOperacoes: int) -> list[list]:
     listaFinal: list = []
