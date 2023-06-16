@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import sys
+sys.setrecursionlimit(100)
 
 @dataclass
 class Ferramenta:
@@ -32,21 +34,18 @@ class Ferramenta:
         listaRegiaoConexa: list[list[int]] = self._preencheListaRegiaoConexa()
         intencidadeCor: int = self.matrizImagem[linha][coluna]
         listaRegiao = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCor, tolerancia, coluna, linha, listaRegiaoConexa)
-        print(listaRegiao)
 
     def _buscaRegioesConexasRec(self, intencidadeCor, intencidadeCorAtual, tolerancia, coluna, linha, listaRegiaoConexa) -> list:
         intencidadeCorAtual: int = self.matrizImagem[linha][coluna]
-        print(intencidadeCorAtual, coluna, linha, intencidadeCor, tolerancia)
         if abs(intencidadeCorAtual - intencidadeCor) <= tolerancia:
             listaRegiaoConexa[linha][coluna] = 1
             possiveisPosicoesConexas = self._encontraPossiveisPosicoesConexas(coluna, linha)
-            print(possiveisPosicoesConexas)
-            for indicePosicao in range(len(possiveisPosicoesConexas) - 1):
-                print(possiveisPosicoesConexas[indicePosicao], len(possiveisPosicoesConexas))
-                colunaAtual = possiveisPosicoesConexas[indicePosicao][1]
-                linhaAtual = possiveisPosicoesConexas[indicePosicao][0]
-                listaRegiaoConexa = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
-        return listaRegiaoConexa
+            print(possiveisPosicoesConexas, listaRegiaoConexa, abs(intencidadeCorAtual - intencidadeCor) <= tolerancia)
+            for posicao in possiveisPosicoesConexas:
+                print(posicao)
+                colunaAtual = posicao[1]
+                linhaAtual = posicao[0]
+                self._buscaRegioesConexasRec(intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
     
     def _encontraPossiveisPosicoesConexas(self, coluna: int, linha: int) -> list[tuple[int, int]]:
         listaPosicoes: list = []
