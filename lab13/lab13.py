@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import sys
-sys.setrecursionlimit(161004)
+sys.setrecursionlimit(1610040)
 
 @dataclass
 class Ferramenta:
@@ -46,7 +46,7 @@ class Ferramenta:
 
 
     def _bucket(self, cor: int, tolerancia: int, coluna: int, linha: int) -> None:
-        regiaoConexa: list[list[int]] = self._buscaRegioesConexas(tolerancia, coluna, linha)
+        regiaoConexa: list[list[int]] = self._buscaRegioesConexas(cor, tolerancia, coluna, linha)
         self.matrizImagem = self._trocaCorMatriz(cor, regiaoConexa, self.matrizImagem)
 
     def _negative(self, tolerancia: int, coluna: int, linha: int) -> None:
@@ -72,22 +72,22 @@ class Ferramenta:
                     matriz[indiceLinha][indiceColuna] = cor
         return matriz
 
-    def _buscaRegioesConexas(self, tolerancia: int, coluna: int, linha: int) -> list[list[int]]:
+    def _buscaRegioesConexas(self, cor: int, tolerancia: int, coluna: int, linha: int) -> list[list[int]]:
         listaRegiaoConexa: list[list[int]] = self._criaListaComONumero(0)
         intencidadeCor: int = self.matrizImagem[linha][coluna]
-        listaRegiao = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCor, tolerancia, coluna, linha, listaRegiaoConexa)
+        listaRegiao = self._buscaRegioesConexasRec(cor, intencidadeCor, intencidadeCor, tolerancia, coluna, linha, listaRegiaoConexa)
         return listaRegiao
 
-    def _buscaRegioesConexasRec(self, intencidadeCor, intencidadeCorAtual, tolerancia, coluna, linha, listaRegiaoConexa) -> list:
+    def _buscaRegioesConexasRec(self, cor, intencidadeCor, intencidadeCorAtual, tolerancia, coluna, linha, listaRegiaoConexa) -> list:
         intencidadeCorAtual: int = self.matrizImagem[linha][coluna]
-        if abs(intencidadeCorAtual - intencidadeCor) <= tolerancia and listaRegiaoConexa[linha][coluna] != 1:
+        if abs(intencidadeCorAtual - intencidadeCor) <= tolerancia and listaRegiaoConexa[linha][coluna] != 1 and self.matrizImagem[linha][coluna] != cor:
             listaRegiaoConexa[linha][coluna] = 1
             possiveisPosicoesConexas = self._encontraPossiveisPosicoesConexas(coluna, linha)
             for posicao in possiveisPosicoesConexas:
                 colunaAtual = posicao[1]
                 linhaAtual = posicao[0]
                 intencidadeCorAtual: int = self.matrizImagem[linhaAtual][colunaAtual]
-                listaRegiaoConexa = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
+                listaRegiaoConexa = self._buscaRegioesConexasRec(cor, intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
             return listaRegiaoConexa
         return listaRegiaoConexa
     
@@ -129,6 +129,8 @@ class Ferramenta:
         return listaFinal
 
     def _leituraArquivo(self) -> None:
+        import os
+        print(os.getcwd())
         arquivo = open(self.caminhoImagem)
 
         linhasArquivo: list = arquivo.readlines()
