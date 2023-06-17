@@ -89,22 +89,19 @@ class Ferramenta:
         listaRegiao = self._buscaRegioesConexasRec(cor, cor, tolerancia, coluna, linha, regiaoConexa)
         return listaRegiao
 
-    # Busca de forma recursiva os pontos conexos ao ponto dado na operacao
-    def _buscaRegioesConexasRec(self, cor: int, corAtual: int, tolerancia: int, coluna: int, linha: int, regiaoConexa: list) -> list:
-        corAtual = self.matrizImagem[linha][coluna]
-        # Verifica se a operacao é o bucket, se for, a variavel bucket recebe a condição que verifica se a cor atual é igual a cor dada na operação
-        bucket: bool = self.matrizImagem[linha][coluna] != self.corBucket if self.corBucket != 256 else True
-        # Verifica se a cor atual esta na faixa de tolerancia, e se ja pintamos ou não ela
-        if abs(corAtual - cor) <= tolerancia and regiaoConexa[linha][coluna] != 1 and bucket:
-            regiaoConexa[linha][coluna] = 1
+    def _buscaRegioesConexasRec(self, intencidadeCor, intencidadeCorAtual, tolerancia, coluna, linha, listaRegiaoConexa) -> list:
+        intencidadeCorAtual: int = self.matrizImagem[linha][coluna]
+        if abs(intencidadeCorAtual - intencidadeCor) <= tolerancia and listaRegiaoConexa[linha][coluna] != 1:
+            listaRegiaoConexa[linha][coluna] = 1
             possiveisPosicoesConexas = self._encontraPossiveisPosicoesConexas(coluna, linha)
             for posicao in possiveisPosicoesConexas:
-                # Busca Recursivamente a regiao conexa de um ponto da lista de vizinhos validos
-                regiaoConexa = self._buscaRegioesConexasRec(cor, corAtual, tolerancia, posicao[1], posicao[0], regiaoConexa)
-            return regiaoConexa
-        return regiaoConexa
-
-    # Encontra as posicoes vizinhas validas ao ponto dado, e retorna uma lista de tuplas com os mesmos
+                colunaAtual = posicao[1]
+                linhaAtual = posicao[0]
+                intencidadeCorAtual: int = self.matrizImagem[linhaAtual][colunaAtual]
+                listaRegiaoConexa = self._buscaRegioesConexasRec(intencidadeCor, intencidadeCorAtual, tolerancia, colunaAtual, linhaAtual, listaRegiaoConexa)
+            return listaRegiaoConexa
+        return listaRegiaoConexa
+    
     def _encontraPossiveisPosicoesConexas(self, coluna: int, linha: int) -> list[tuple[int, int]]:
         listaPosicoes: list = []
         tupla: tuple[int, int] = (0, 0)
@@ -146,6 +143,8 @@ class Ferramenta:
 
     # Le o arquivo dado, e guarda as informações uteis
     def _leituraArquivo(self) -> None:
+        import os
+        print(os.getcwd())
         arquivo = open(self.caminhoImagem)
 
         linhasArquivo: list = arquivo.readlines()
